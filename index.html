@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>○○公演 公式サイト</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Noto Sans JP", sans-serif;
+      background: radial-gradient(circle at top, #1a2340, #050814);
+      color: #f5f5ff;
+      line-height: 1.7;
+    }
+    header {
+      padding: 40px 20px;
+      text-align: center;
+      background: linear-gradient(135deg, #ff4b8b, #7b5dff);
+    }
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+      letter-spacing: .08em;
+    }
+    header p {
+      margin: 0;
+      font-size: .95rem;
+      opacity: .9;
+    }
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+    section {
+      background: rgba(10, 12, 30, 0.9);
+      border-radius: 12px;
+      padding: 18px 18px 20px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,.06);
+    }
+    section h2 {
+      margin: 0 0 8px;
+      font-size: 1.2rem;
+      border-left: 4px solid #ff4b8b;
+      padding-left: 8px;
+    }
+    .schedule-item {
+      margin: 4px 0;
+      font-size: .95rem;
+    }
+    .tag {
+      display: inline-block;
+      font-size: .7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.4);
+      margin-left: 6px;
+    }
+    a {
+      color: #ff9fe0;
+    }
+    a.button {
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: none;
+      text-decoration: none;
+      font-size: .9rem;
+      margin-top: 8px;
+      background: linear-gradient(135deg,#ff4b8b,#ffb347);
+      color: #1b1026;
+      font-weight: 600;
+    }
+    footer {
+      text-align: center;
+      font-size: .75rem;
+      opacity: .6;
+      padding: 24px 16px 32px;
+    }
+    @media (min-width: 768px) {
+      header h1 {
+        font-size: 2.4rem;
+      }
+      main {
+        padding: 32px 16px 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>舞台「タイトル」</h1>
+    <p>Battle of SEKAI など、公演のキャッチコピーをここに。</p>
+  </header>
+
+  <main>
+    <section id="intro">
+      <h2>イントロダクション</h2>
+      <p>
+        冴えないフリーターの広瀬春馬。<br>
+        バイトでは叱られ、家族には呆れられ、未来なんて見えない毎日。<br>
+        ――ここに作品のあらすじを入れていきます。
+      </p>
+    </section>
+
+    <section id="info">
+      <h2>公演情報</h2>
+      <p class="schedule-item">日程：2025年12月17日(水)〜21日(日)</p>
+      <p class="schedule-item">会場：TheaterGreen BOX in BOX THEATER</p>
+      <p class="schedule-item">
+        住所：東京都○○区○○ など
+      </p>
+    </section>
+
+    <section id="ticket">
+      <h2>チケット</h2>
+      <p>最前指定席：○○円（特典：サイン入りブロマイド、アクリルスタンド 他）</p>
+      <p>前方指定席：○○円</p>
+      <p>一般席：○○円</p>
+      <a href="#" class="button">▶ チケット予約フォームはこちら</a>
+      <p style="font-size:.8rem; opacity:.8; margin-top:6px;">
+        ※外部フォーム（ Googleフォーム / 専用予約サイト等 ）へ遷移します。
+      </p>
+    </section>
+
+    <section id="cast">
+      <h2>キャスト</h2>
+      <p>広瀬春馬：○○○○</p>
+      <p>狐姫：○○○○</p>
+      <p>ほか、キャスト一覧をここに追加していきます。</p>
+    </section>
+
+    <section id="contact">
+      <h2>お問い合わせ</h2>
+      <p>制作：株式会社ユーキース・エンタテインメント</p>
+      <p>メール：example@example.com</p>
+      <p>公式サイト：<a href="https://you-keys.net/" target="_blank" rel="noopener">https://you-keys.net/</a></p>
+    </section>
+  </main>
+
+  <footer>
+    &copy; 2025 Your Company / You-Keys Entertainment
+  </footer>
+</body>
+</html>
