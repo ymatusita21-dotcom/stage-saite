@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>制作管理ダッシュボード - 魔法少女、辞めます。</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        body { font-family: 'Noto+Sans+JP', sans-serif; background-color: #f1f5f9; }
+        .tab-active { border-bottom: 3px solid #4f46e5; color: #4f46e5; font-weight: bold; }
+        .table-container { background: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); overflow: hidden; margin-bottom: 2rem; }
+        th { font-size: 0.75rem; text-transform: uppercase; color: #64748b; background: #f8fafc; padding: 1rem; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; vertical-align: top; }
+        tr:hover { background-color: #f8fafc; }
+    </style>
+</head>
+<body class="min-h-screen pb-20 text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-indigo-950 text-white p-6 shadow-xl mb-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold italic tracking-wider">Production Master Dashboard</h1>
+                <p class="text-indigo-300 text-xs mt-1">舞台「魔法少女、辞めます。」制作一括管理ポータル</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="fetchAllData()" id="refreshBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-bold transition flex items-center gap-2 shadow-lg">
+                    <span id="refreshIcon">🔄</span> 最新データに更新
+                </button>
+                <button onclick="exportAllToCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-bold transition shadow-lg text-sm">
+                    一括CSV出力
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4">
+        
+        <!-- Stats Row -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
+                <p class="text-[10px] text-gray-400 font-bold uppercase">登録総数</p>
+                <p class="text-2xl font-bold text-gray-800"><span id="totalCount">0</span> <small class="text-sm">名</small></p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-pink-500">
+                <p class="text-[10px] text-gray-400 font-bold uppercase">キャスト</p>
+                <p class="text-2xl font-bold text-gray-800"><span id="castCount">0</span> <small class="text-sm">名</small></p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
+                <p class="text-[10px] text-gray-400 font-bold uppercase">スタッフ</p>
+                <p class="text-2xl font-bold text-gray-800"><span id="staffCount">0</span> <small class="text-sm">名</small></p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
+                <p class="text-[10px] text-gray-400 font-bold uppercase">本日NG者</p>
+                <p class="text-2xl font-bold text-orange-600"><span id="todayNGCount">0</span> <small class="text-sm">名</small></p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex bg-white rounded-t-xl border-b overflow-hidden shadow-sm">
+            <button onclick="switchTab('personnel')" id="tabBtn_personnel" class="flex-1 py-4 text-sm transition tab-active">
+                名簿一覧
+            </button>
+            <button onclick="switchTab('ng')" id="tabBtn_ng" class="flex-1 py-4 text-sm transition text-gray-500 border-l">
+                NG総括カレンダー
+            </button>
+            <button onclick="switchTab('tickets')" id="tabBtn_tickets" class="flex-1 py-4 text-sm transition text-gray-500 border-l">
+                チケット予約状況
+            </button>
+        </nav>
+
+        <!-- Tab: Personnel List -->
+        <div id="tab_personnel" class="space-y-6 mt-0">
+            <div class="table-container border-t-4 border-pink-500">
+                <div class="p-4 bg-pink-50 flex justify-between items-center">
+                    <h3 class="font-bold text-pink-900">キャスト名簿</h3>
+                    <span id="castStatusText" class="text-[10px] text-pink-600">0 records</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr>
+                                <th>氏名</th>
+                                <th>事務所</th>
+                                <th>メール</th>
+                                <th>電話</th>
+                                <th>SNS等</th>
+                            </tr>
+                        </thead>
+                        <tbody id="castTableBody">
+                            <tr><td colspan="5" class="text-center p-10 text-gray-400 italic">データを読み込んでください</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-container border-t-4 border-blue-500">
+                <div class="p-4 bg-blue-50 flex justify-between items-center">
+                    <h3 class="font-bold text-blue-900">スタッフ名簿</h3>
+                    <span id="staffStatusText" class="text-[10px] text-blue-600">0 records</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr>
+                                <th>氏名</th>
+                                <th>会社 / クレジット</th>
+                                <th>メール</th>
+                                <th>電話</th>
+                                <th>備考 / ギャラ条件</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffTableBody">
+                            <tr><td colspan="5" class="text-center p-10 text-gray-400 italic">データを読み込んでください</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: NG Schedule Master -->
+        <div id="tab_ng" class="hidden table-container">
+            <div class="p-4 bg-orange-50 flex justify-between items-center border-b border-orange-100">
+                <div>
+                    <h3 class="font-bold text-orange-900">NGスケジュール一括確認</h3>
+                    <p class="text-[10px] text-orange-700 font-bold">全員のNG情報を日付順に統合して表示しています。</p>
+                </div>
+                <input type="text" id="ngSearch" oninput="filterNGTable()" placeholder="日付や名前で絞り込み..." class="text-xs p-2 border rounded outline-none w-64 shadow-sm">
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr>
+                            <th class="w-32">日付</th>
+                            <th class="w-40">氏名</th>
+                            <th class="w-16">区分</th>
+                            <th class="w-40">時間帯</th>
+                            <th>理由・詳細</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ngTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Ticket Summary -->
+        <div id="tab_tickets" class="hidden table-container">
+            <div class="p-8 text-center">
+                <div class="inline-block p-6 bg-indigo-50 rounded-2xl border-2 border-dashed border-indigo-200">
+                    <h3 class="text-xl font-bold text-indigo-900 mb-2">チケット予約データ連携</h3>
+                    <p class="text-sm text-indigo-600 mb-4">この機能は「チケット予約状況」のCSVをアップロード、<br>またはプレイガイドAPIと連携した際に反映されます。</p>
+                    <button class="bg-indigo-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg opacity-50 cursor-not-allowed">
+                        外部データをインポート
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // IDs from previous portals
+        const appIdStaff = 'stage-staff-portal';
+        const appIdCast = 'stage-cast-portal';
+        
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let masterData = { staff: [], cast: [] };
+
+        // Auto-login and load
+        window.onload = async () => {
+            try {
+                // Rule 3: Auth first
+                await signInAnonymously(auth);
+                fetchAllData();
+            } catch (err) {
+                showToast("認証エラー", "bg-red-600");
+            }
+        };
+
+        window.fetchAllData = async () => {
+            const btn = document.getElementById('refreshBtn');
+            const icon = document.getElementById('refreshIcon');
+            btn.disabled = true;
+            icon.classList.add('animate-spin');
+
+            try {
+                // Fetch Staff Data
+                const staffUsersSnap = await getDocs(collection(db, 'artifacts', appIdStaff, 'users'));
+                const staffPromises = staffUsersSnap.docs.map(async (uDoc) => {
+                    const privateSnap = await getDocs(collection(db, 'artifacts', appIdStaff, 'users', uDoc.id, 'private_data'));
+                    const info = privateSnap.docs.find(d => d.id === 'staff_info');
+                    return info ? info.data() : null;
+                });
+
+                // Fetch Cast Data
+                const castUsersSnap = await getDocs(collection(db, 'artifacts', appIdCast, 'users'));
+                const castPromises = castUsersSnap.docs.map(async (uDoc) => {
+                    const privateSnap = await getDocs(collection(db, 'artifacts', appIdCast, 'users', uDoc.id, 'private_data'));
+                    const profile = privateSnap.docs.find(d => d.id === 'cast_profile');
+                    const ng = privateSnap.docs.find(d => d.id === 'ng_schedules');
+                    return {
+                        profile: profile ? profile.data() : null,
+                        ngSchedules: ng ? ng.data().list : []
+                    };
+                });
+
+                const [staffRes, castRes] = await Promise.all([
+                    Promise.all(staffPromises),
+                    Promise.all(castPromises)
+                ]);
+
+                masterData.staff = staffRes.filter(r => r !== null);
+                masterData.cast = castRes.filter(r => r.profile !== null);
+
+                renderAll();
+                showToast("全データを同期しました");
+            } catch (err) {
+                console.error(err);
+                showToast("読み込み失敗", "bg-red-600");
+            } finally {
+                btn.disabled = false;
+                icon.classList.remove('animate-spin');
+            }
+        };
+
+        function renderAll() {
+            updateStats();
+            renderTables();
+            renderNGMaster();
+        }
+
+        function updateStats() {
+            document.getElementById('staffCount').textContent = masterData.staff.length;
+            document.getElementById('castCount').textContent = masterData.cast.length;
+            document.getElementById('totalCount').textContent = masterData.staff.length + masterData.cast.length;
+            
+            const today = new Date().toISOString().split('T')[0];
+            let todayNG = 0;
+            [...masterData.staff, ...masterData.cast].forEach(person => {
+                const list = person.ngSchedules || [];
+                if (list.some(ng => ng.date === today)) todayNG++;
+            });
+            document.getElementById('todayNGCount').textContent = todayNG;
+        }
+
+        function renderTables() {
+            // Cast Table
+            const castBody = document.getElementById('castTableBody');
+            castBody.innerHTML = masterData.cast.map(c => `
+                <tr>
+                    <td class="font-bold text-pink-700">${c.profile.castName}</td>
+                    <td>${c.profile.agency}</td>
+                    <td class="text-xs font-mono">${c.profile.email}</td>
+                    <td class="text-xs">${c.profile.phone}</td>
+                    <td class="text-[10px] text-gray-500 max-w-[200px] truncate">${c.profile.snsUrl || '-'}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="5" class="text-center p-10">データなし</td></tr>';
+
+            // Staff Table
+            const staffBody = document.getElementById('staffTableBody');
+            staffBody.innerHTML = masterData.staff.map(s => `
+                <tr>
+                    <td class="font-bold text-blue-700">${s.profile.staffName}</td>
+                    <td><div class="text-sm">${s.profile.credit}</div><div class="text-[10px] text-gray-400">${s.profile.company || '-'}</div></td>
+                    <td class="text-xs font-mono">${s.profile.email}</td>
+                    <td class="text-xs">${s.profile.phone}</td>
+                    <td><div class="text-[10px] text-amber-600 font-bold">${s.terms || '-'}</div><div class="text-[10px] text-gray-400">${s.profile.notes || ''}</div></td>
+                </tr>
+            `).join('') || '<tr><td colspan="5" class="text-center p-10">データなし</td></tr>';
+        }
+
+        function renderNGMaster() {
+            const body = document.getElementById('ngTableBody');
+            let masterList = [];
+            
+            masterData.staff.forEach(s => {
+                (s.ngSchedules || []).forEach(ng => masterList.push({ ...ng, name: s.profile.staffName, type: 'スタッフ' }));
+            });
+            masterData.cast.forEach(c => {
+                (c.ngSchedules || []).forEach(ng => masterList.push({ ...ng, name: c.profile.castName, type: 'キャスト' }));
+            });
+
+            masterList.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            body.innerHTML = masterList.map(ng => `
+                <tr class="ng-row">
+                    <td class="font-mono text-xs font-bold">${ng.date}</td>
+                    <td class="font-bold">${ng.name}</td>
+                    <td><span class="px-2 py-0.5 rounded text-[10px] ${ng.type === 'キャスト' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}">${ng.type}</span></td>
+                    <td class="text-xs text-orange-600 font-bold">${ng.time}</td>
+                    <td class="text-xs text-gray-500">${ng.reason || '-'}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="5" class="text-center p-10">NGデータなし</td></tr>';
+        }
+
+        window.exportAllToCSV = () => {
+            let csv = "区分,名前,事務所/会社,メール,電話,クレジット,ギャラ条件/SNS\n";
+            masterData.cast.forEach(c => {
+                csv += `キャスト,"${c.profile.castName}","${c.profile.agency}","${c.profile.email}","${c.profile.phone}","${c.profile.castName}","${c.profile.snsUrl}"\n`;
+            });
+            masterData.staff.forEach(s => {
+                csv += `スタッフ,"${s.profile.staffName}","${s.profile.company}","${s.profile.email}","${s.profile.phone}","${s.profile.credit}","${s.terms}"\n`;
+            });
+
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", "production_master_list.csv");
+            link.click();
+        };
+
+        window.switchTab = (tab) => {
+            ['personnel', 'ng', 'tickets'].forEach(t => {
+                document.getElementById(`tab_${t}`).classList.toggle('hidden', t !== tab);
+                const btn = document.getElementById(`tabBtn_${t}`);
+                if (t === tab) btn.classList.add('tab-active');
+                else btn.classList.remove('tab-active');
+            });
+        };
+
+        window.filterNGTable = () => {
+            const q = document.getElementById('ngSearch').value.toLowerCase();
+            document.querySelectorAll('.ng-row').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
+            });
+        };
+
+        function showToast(msg, color = "bg-indigo-800") {
+            const div = document.createElement('div');
+            div.className = `fixed bottom-10 right-10 ${color} text-white px-8 py-4 rounded-xl shadow-2xl z-[200] text-sm font-bold animate-bounce`;
+            div.textContent = msg;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 2500);
+        }
+    </script>
+</body>
+</html>
